@@ -1,1 +1,151 @@
+class PPMimage:
+    def __init__(self, infile, outfile):
+       
+        self.infile = infile
+        self.outfile = outfile
 
+       
+        self.magic = ""
+        self.width = 0
+        self.height = 0
+        self.max_value = 0
+
+       
+        self.pixels = []
+
+       
+        self.read_file()
+
+       
+        self.negate_red()
+        self.flip_horizontal()
+        self.grey_scale()
+        self.flatten_red()
+
+       
+        self.write_file()
+
+    def read_file(self):
+  
+        file = open(self.infile, "r")
+
+  
+        self.magic = file.readline().strip()
+
+
+        size_line = file.readline().strip()
+
+  
+        self.max_value = file.readline().strip()
+
+  
+        size_parts = size_line.split()
+        self.width = int(size_parts[0])
+        self.height = int(size_parts[1])
+
+
+        for line in file:
+            line = line.strip()
+
+       
+            if line != "":
+        
+                numbers = line.split()
+
+           
+                for num in numbers:
+                    self.pixels.append(int(num))
+
+  
+        file.close()
+
+
+    def negate_red(self):
+    
+        for i in range(0, len(self.pixels), 3):
+            red = self.pixels[i]  
+
+            new_red = 255 - red 
+
+            self.pixels[i] = new_red 
+
+
+
+    def flip_horizontal(self):
+   
+        row_length = self.width * 3  
+    
+        for row in range(self.height):
+       
+            start = row * row_length
+            end = start + row_length
+
+       
+            row_pixels = self.pixels[start:end]
+
+        
+            flipped_row = []
+
+        
+            for i in range(len(row_pixels) - 3, -1, -3):
+                flipped_row.extend([
+                    row_pixels[i],     # R
+                    row_pixels[i + 1], # G
+                    row_pixels[i + 2]  # B
+                ])
+
+    def grey_scale(self):
+   
+        i = 0
+        while i < len(self.pixels):
+            red = self.pixels[i]
+            green = self.pixels[i + 1]
+            blue = self.pixels[i + 2]
+
+        
+            average = (red + green + blue) // 3
+
+        
+            self.pixels[i] = average
+            self.pixels[i + 1] = average
+            self.pixels[i + 2] = average
+
+        
+            i = i + 3
+
+
+    def flatten_red(self):
+    
+        i = 0
+        while i < len(self.pixels):
+        
+            self.pixels[i] = 0
+
+        
+            i = i + 3
+
+
+    def save_picture(self):
+        file = open(self.outfile, "w")
+
+    
+        file.write(self.magic + "\n")
+
+        file.write(str(self.width) + " " + str(self.height) + "\n")
+
+        file.write(str(self.max_value) + "\n")
+        
+        count = 0
+
+
+        for num in self.pixels:
+            file.write(str(num) + " ")
+            
+            count = count + 1
+
+        
+            if count == self.width * 3:
+                file.write("\n")
+                count = 0
+
+        file.close()
